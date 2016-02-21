@@ -4,13 +4,14 @@
 ####################################################################################
 # Program: endlists.sh
 # Type: bash shell script
-# Current Version: 1.09  Feb 14 2016
+# Current Version: 1.10  Feb 14 2016
 # Stable Version:  1.02, Feb 13 2016
 # Author: Endwall Development Team
 #
 # Description:  Traditional iptables list based blacklisting 
 #
-# Changes:  - Use && to execute log and drop rules in parallel (multiprocess)
+# Changes:  - Fixed the logging bug (reversed the order of drop and log)
+#           - Use && to execute log and drop rules in parallel (multiprocess)
 #           - changed echo to Endlists Loaded
 #           - Fixed a typo in the smtp blacklist section
 #           - Changed order of blacklists and whitelists
@@ -190,14 +191,17 @@ echo HTTP/HTTPS BLACKLIST LOADING
 for blackout in $(cat http_blacklist.txt);
 do 
 (
-iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout -m multiport  --dports 80,443 -j LOG --log-prefix "[HTTP-BL OUT] "  --log-level=info && iptables -I OUTPUT   -p tcp -s $int_ip1 -d $blackout -m multiport --dports 80,443 -j DROP;
-iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout -m multiport  --sports 80,443 -j LOG --log-prefix "[HTTP-BL OUT] "  --log-level=info && iptables -I OUTPUT   -p tcp -s $int_ip1 -d $blackout -m multiport --sports 80,443 -j DROP;
-iptables -I INPUT 27   -p tcp -d $int_ip1 -s $blackout -m multiport --dports 80,443 -j LOG --log-prefix "[HTTP-BL IN] " --log-level=info && iptables -I INPUT 27   -p tcp -d $int_ip1 -s $blackout -m multiport --dports 80,443 -j DROP;
-iptables -I INPUT 27   -p tcp -d $int_ip1 -s $blackout -m multiport --sports 80,443 -j LOG --log-prefix "[HTTP-BL IN] " --log-level=info && iptables -I INPUT 27   -p tcp -d $int_ip1 -s $blackout -m multiport --sports 80,443 -j DROP;
-#iptables -I FORWARD  -p tcp -d $int_ip1 -s $blackout -m multiport --dports 80,443 -j LOG --log-prefix "[HTTP-BL FORWARD IN] "  --log-level=info;
+
+iptables -I OUTPUT   -p tcp -s $int_ip1 -d $blackout -m multiport --dports 80,443 -j DROP && iptables -I OUTPUT   -p tcp -s $int_ip1 -d $blackout -m multiport --sports 80,443 -j DROP;
+iptables -I INPUT 27   -p tcp -d $int_ip1 -s $blackout -m multiport --dports 80,443 -j DROP && iptables -I INPUT 27   -p tcp -d $int_ip1 -s $blackout -m multiport --sports 80,443 -j DROP;
+
+iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout -m multiport  --dports 80,443 -j LOG --log-prefix "[HTTP-BL OUT] "  --log-level=info && iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout -m multiport  --sports 80,443 -j LOG --log-prefix "[HTTP-BL OUT] "  --log-level=info 
+iptables -I INPUT 27   -p tcp -d $int_ip1 -s $blackout -m multiport --dports 80,443 -j LOG --log-prefix "[HTTP-BL IN] " --log-level=info && iptables -I INPUT 27   -p tcp -d $int_ip1 -s $blackout -m multiport --sports 80,443 -j LOG --log-prefix "[HTTP-BL IN] " --log-level=info 
+
 #iptables -I FORWARD  -p tcp -d $int_ip1 -s $blackout -m multiport --dports 80,443 -j DROP;
-#iptables -I FORWARD  -p tcp -s $int_ip1 -d $blackout -m multiport --dports 80,443 -j LOG --log-prefix "[HTTP-BL FORWARD OUT] " --log-level=info;
 #iptables -I FORWARD  -p tcp -s $int_ip1 -d $blackout -m multiport --dports 80,443 -j DROP;
+#iptables -I FORWARD  -p tcp -d $int_ip1 -s $blackout -m multiport --dports 80,443 -j LOG --log-prefix "[HTTP-BL FORWARD IN] "  --log-level=info;
+#iptables -I FORWARD  -p tcp -s $int_ip1 -d $blackout -m multiport --dports 80,443 -j LOG --log-prefix "[HTTP-BL FORWARD OUT] " --log-level=info;
 )
 echo $blackout ; 
 done 
@@ -208,14 +212,17 @@ echo SMTP BLACKLIST LOADING
 for blackout in $(cat smtp_blacklist.txt);
 do 
 (
-iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout -m multiport --dports 25,587 -j LOG --log-prefix "[SMTP-BL SPAM OUT] " --log-level=info && iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout -m multiport --dports 25,587 -j DROP;
-iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout -m multiport --sports 25,587 -j LOG --log-prefix "[SMTP-BL SPAM OUT] " --log-level=info && iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout -m multiport --sports 25,587 -j DROP;
-iptables -I INPUT 27  -p tcp -d $int_ip1 -s $blackout -m multiport --dports 25,587 -j LOG --log-prefix "[SMTP-BL SPAM IN] " --log-level=info && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $blackout -m multiport --dports 25,587 -j DROP;
-iptables -I INPUT 27  -p tcp -d $int_ip1 -s $blackout -m multiport --sports 25,587 -j LOG --log-prefix "[SMTP-BL SPAM IN] " --log-level=info && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $blackout -m multiport --sports 25,587 -j DROP;
-#iptables -I FORWARD -p tcp -d $int_ip1 -s $blackout -m multiport --dports 25,587 -j LOG --log-prefix "[SMTP-BL FORWARD IN] " --log-level=info;
+
+iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout -m multiport --dports 25,587 -j DROP && iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout -m multiport --sports 25,587 -j DROP;
+iptables -I INPUT 27  -p tcp -d $int_ip1 -s $blackout -m multiport --dports 25,587 -j DROP && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $blackout -m multiport --sports 25,587 -j DROP;
+
+iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout -m multiport --dports 25,587 -j LOG --log-prefix "[SMTP-BL SPAM OUT] " --log-level=info &&iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout -m multiport --sports 25,587 -j LOG --log-prefix "[SMTP-BL SPAM OUT] " --log-level=info; 
+iptables -I INPUT 27  -p tcp -d $int_ip1 -s $blackout -m multiport --dports 25,587 -j LOG --log-prefix "[SMTP-BL SPAM IN] " --log-level=info && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $blackout -m multiport --sports 25,587 -j LOG --log-prefix "[SMTP-BL SPAM IN] " --log-level=info ;
+
 #iptables -I FORWARD -p tcp -d $int_ip1 -s $blackout -m multiport --dports 25,587 -j DROP;
-#iptables -I FORWARD -p tcp -s $int_ip1 -d $blackout -m multiport --dports 25,587 -j LOG --log-prefix "[SMTP-BL FORWARD OUT] " --log-level=info;
 #iptables -I FORWARD -p tcp -s $int_ip1 -d $blackout -m multiport --dports 25,587 -j DROP;
+#iptables -I FORWARD -p tcp -d $int_ip1 -s $blackout -m multiport --dports 25,587 -j LOG --log-prefix "[SMTP-BL FORWARD IN] " --log-level=info;
+#iptables -I FORWARD -p tcp -s $int_ip1 -d $blackout -m multiport --dports 25,587 -j LOG --log-prefix "[SMTP-BL FORWARD OUT] " --log-level=info;
 )
 echo $blackout ; 
 done 
@@ -225,35 +232,38 @@ echo DNS BLACKLIST LOADING
 for blackout in $(cat dns_blacklist.txt);
 do 
 (
-iptables  -I OUTPUT  -p udp -s $int_ip1 -d $blackout --dport 53 -j LOG --log-prefix "[DNS-BL UDP OUT] " --log-level=info && iptables  -I OUTPUT  -p udp -s $int_ip1 -d $blackout --dport 53 -j DROP;
-iptables  -I OUTPUT  -p udp -s $int_ip1 -d $blackout --sport 53 -j LOG --log-prefix "[DNS-BL UDP OUT] " --log-level=info && iptables  -I OUTPUT  -p udp -s $int_ip1 -d $blackout --sport 53 -j DROP;
-iptables  -I INPUT 27  -p udp -d $int_ip1 -s $blackout --dport 53 -j LOG --log-prefix "[DNS-BL UDP IN] " --log-level=info && iptables  -I INPUT 27  -p udp -d $int_ip1 -s $blackout --dport 53 -j DROP;
-iptables  -I INPUT 27  -p udp -d $int_ip1 -s $blackout --sport 53 -j LOG --log-prefix "[DNS-BL UDP IN] " --log-level=info && iptables  -I INPUT 27  -p udp -d $int_ip1 -s $blackout --sport 53 -j DROP;
+iptables  -I OUTPUT  -p udp -s $int_ip1 -d $blackout --dport 53 -j DROP && iptables  -I OUTPUT  -p udp -s $int_ip1 -d $blackout --sport 53 -j DROP;
+iptables  -I INPUT 27  -p udp -d $int_ip1 -s $blackout --dport 53 -j DROP && iptables  -I INPUT 27  -p udp -d $int_ip1 -s $blackout --sport 53 -j DROP;
 
-#iptables  -I FORWARD -p udp -d $int_ip1 -s $blackout --dport 53 -j LOG --log-prefix "[DNS-BL UDP FORWARD IN] " --log-level=info;
+
+iptables  -I OUTPUT  -p udp -s $int_ip1 -d $blackout --dport 53 -j LOG --log-prefix "[DNS-BL UDP OUT] " --log-level=info && iptables  -I OUTPUT  -p udp -s $int_ip1 -d $blackout --sport 53 -j LOG --log-prefix "[DNS-BL UDP OUT] " --log-level=info 
+iptables  -I INPUT 27  -p udp -d $int_ip1 -s $blackout --dport 53 -j LOG --log-prefix "[DNS-BL UDP IN] " --log-level=info && iptables  -I INPUT 27  -p udp -d $int_ip1 -s $blackout --sport 53 -j LOG --log-prefix "[DNS-BL UDP IN] " --log-level=info 
+
 #iptables  -I FORWARD -p udp -d $int_ip1 -s $blackout --dport 53 -j DROP;
-#iptables  -I FORWARD -p udp -s $int_ip1 -d $blackout --dport 53 -j LOG --log-prefix "[DNS-BL UDP FORWARD OUT] " --log-level=info;
 #iptables  -I FORWARD -p udp -s $int_ip1 -d $blackout --dport 53 -j DROP;
-
-#iptables  -I FORWARD -p udp -d $int_ip1 -s $blackout --sport 53 -j LOG --log-prefix "[DNS-BL UDP FORWARD IN] " --log-level=info;
 #iptables  -I FORWARD -p udp -d $int_ip1 -s $blackout --sport 53 -j DROP;
-#iptables  -I FORWARD -p udp -s $int_ip1 -d $blackout --sport 53 -j LOG --log-prefix "[DNS-BL UDP FORWARD OUT] " --log-level=info;
 #iptables  -I FORWARD -p udp -s $int_ip1 -d $blackout --sport 53 -j DROP;
 
-iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout --dport 53 -j LOG --log-prefix "[DNS-BL TCP OUT] " --log-level=info && iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout --dport 53 -j DROP;
-iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout --sport 53 -j LOG --log-prefix "[DNS-BL TCP OUT] " --log-level=info && iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout --sport 53 -j DROP;
-iptables -I INPUT 27  -p tcp -d $int_ip1 -s $blackout --dport 53 -j LOG --log-prefix "[DNS-BL TCP IN] " --log-level=info && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $blackout --dport 53 -j DROP;
-iptables -I INPUT 27  -p tcp -d $int_ip1 -s $blackout --sport 53 -j LOG --log-prefix "[DNS-BL TCP IN] " --log-level=info && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $blackout --sport 53 -j DROP;
+#iptables  -I FORWARD -p udp -d $int_ip1 -s $blackout --dport 53 -j LOG --log-prefix "[DNS-BL UDP FORWARD IN] " --log-level=info;
+#iptables  -I FORWARD -p udp -s $int_ip1 -d $blackout --dport 53 -j LOG --log-prefix "[DNS-BL UDP FORWARD OUT] " --log-level=info;
+#iptables  -I FORWARD -p udp -d $int_ip1 -s $blackout --sport 53 -j LOG --log-prefix "[DNS-BL UDP FORWARD IN] " --log-level=info;
+#iptables  -I FORWARD -p udp -s $int_ip1 -d $blackout --sport 53 -j LOG --log-prefix "[DNS-BL UDP FORWARD OUT] " --log-level=info;
+
+iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout --dport 53 -j DROP && iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout --sport 53 -j DROP;
+iptables -I INPUT 27  -p tcp -d $int_ip1 -s $blackout --dport 53 -j DROP && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $blackout --sport 53 -j DROP;
+
+iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout --sport 53 -j LOG --log-prefix "[DNS-BL TCP OUT] " --log-level=info && iptables -I OUTPUT  -p tcp -s $int_ip1 -d $blackout --dport 53 -j LOG --log-prefix "[DNS-BL TCP OUT] " --log-level=info;
+iptables -I INPUT 27  -p tcp -d $int_ip1 -s $blackout --dport 53 -j LOG --log-prefix "[DNS-BL TCP IN] " --log-level=info && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $blackout --sport 53 -j LOG --log-prefix "[DNS-BL TCP IN] " --log-level=info;
+
+#iptables -I FORWARD -p tcp -d $int_ip1 -s $blackout --dport 53 -j DROP;
+#iptables -I FORWARD -p tcp -s $int_ip1 -d $blackout --dport 53 -j DROP;
+#iptables -I FORWARD -p tcp -d $int_ip1 -s $blackout --sport 53 -j DROP;
+#iptables -I FORWARD -p tcp -s $int_ip1 -d $blackout --sport 53 -j DROP;
 
 #iptables -I FORWARD -p tcp -d $int_ip1 -s $blackout --dport 53 -j LOG --log-prefix "[DNS-BL TCP FORWARD IN] " --log-level=info;
-#iptables -I FORWARD -p tcp -d $int_ip1 -s $blackout --dport 53 -j DROP;
 #iptables -I FORWARD -p tcp -s $int_ip1 -d $blackout --dport 53 -j LOG --log-prefix "[DNS-BL TCP FORWARD OUT] " --log-level=info;
-#iptables -I FORWARD -p tcp -s $int_ip1 -d $blackout --dport 53 -j DROP;
-
 #iptables -I FORWARD -p tcp -d $int_ip1 -s $blackout --sport 53 -j LOG --log-prefix "[DNS-BL TCP FORWARD IN] " --log-level=info;
-#iptables -I FORWARD -p tcp -d $int_ip1 -s $blackout --sport 53 -j DROP;
 #iptables -I FORWARD -p tcp -s $int_ip1 -d $blackout --sport 53 -j LOG --log-prefix "[DNS-BL TCP FORWARD OUT] " --log-level=info;
-#iptables -I FORWARD -p tcp -s $int_ip1 -d $blackout --sport 53 -j DROP;
 
 )
 echo $blackout ; 
@@ -264,10 +274,12 @@ echo EMAIL BLACKLIST LOADING
 for blackout in $(cat email_blacklist.txt);
 do 
 (
-iptables -I INPUT 27  -p tcp --dport 25 -m string --string "$blackout" --algo bm -j LOG --log-prefix "[EMAIL SPAM] " --log-level=info && iptables -I INPUT 27  -p tcp --dport 25 -m string --string "$blackout" --algo bm -j DROP 
-iptables -I OUTPUT  -p tcp --dport 25 -m string --string "$blackout" --algo bm -j LOG --log-prefix "[EMAIL SPAM] " --log-level=info && iptables -I OUTPUT  -p tcp --dport 25 -m string --string "$blackout" --algo bm -j DROP 
-#iptables -I FORWARD -p tcp --dport 25 -m string --string "$blackout" --algo bm -j LOG --log-prefix "[EMAIL SPAM] " --log-level=info
+
+iptables -I INPUT 27  -p tcp --dport 25 -m string --string "$blackout" --algo bm -j DROP && iptables -I OUTPUT  -p tcp --dport 25 -m string --string "$blackout" --algo bm -j DROP ;
+iptables -I INPUT 27  -p tcp --dport 25 -m string --string "$blackout" --algo bm -j LOG --log-prefix "[EMAIL SPAM] " --log-level=info && iptables -I OUTPUT  -p tcp --dport 25 -m string --string "$blackout" --algo bm -j LOG --log-prefix "[EMAIL SPAM] " --log-level=info ;
+
 #iptables -I FORWARD -p tcp --dport 25 -m string --string "$blackout" --algo bm -j DROP 
+#iptables -I FORWARD -p tcp --dport 25 -m string --string "$blackout" --algo bm -j LOG --log-prefix "[EMAIL SPAM] " --log-level=info
 )
 echo $blackout ; 
 done 
@@ -277,11 +289,12 @@ echo HTML BLACKLIST LOADING
 for blackout in $(cat html_blacklist.txt);
 do 
 (
-iptables -I INPUT 27  -p tcp -m multiport --dports 80,443 -m string --string "$blackout" --algo bm -j LOG --log-prefix "[HTTP SPAM] " --log-level=info && iptables -I INPUT 27  -p tcp -m multiport --dports 80,443 -m string --string "$blackout" --algo bm -j DROP 
-iptables -I OUTPUT  -p tcp -m multiport --dports 80,443 -m string --string "$blackout" --algo bm -j LOG --log-prefix "[HTTP SPAM] " --log-level=info && iptables -I OUTPUT  -p tcp -m multiport --dports 80,443 -m string --string "$blackout" --algo bm -j DROP 
 
-#iptables -I FORWARD -p tcp -m multiport --dports 80,443 -m string --string "$blackout" --algo bm -j LOG --log-prefix "[HTTP SPAM] " --log-level=info;
+iptables -I INPUT 27  -p tcp -m multiport --dports 80,443 -m string --string "$blackout" --algo bm -j DROP && iptables -I OUTPUT  -p tcp -m multiport --dports 80,443 -m string --string "$blackout" --algo bm -j DROP;
+iptables -I INPUT 27  -p tcp -m multiport --dports 80,443 -m string --string "$blackout" --algo bm -j LOG --log-prefix "[HTTP SPAM] " --log-level=info && iptables -I OUTPUT  -p tcp -m multiport --dports 80,443 -m string --string "$blackout" --algo bm -j LOG --log-prefix "[HTTP SPAM] " --log-level=info;
+
 #iptables -I FORWARD -p tcp -m multiport --dports 80,443 -m string --string "$blackout" --algo bm -j DROP 
+#iptables -I FORWARD -p tcp -m multiport --dports 80,443 -m string --string "$blackout" --algo bm -j LOG --log-prefix "[HTTP SPAM] " --log-level=info;
 )
 echo $blackout ; 
 done 
@@ -291,13 +304,15 @@ echo ATTACKER BLACKLIST LOADING
 for blackout in $(cat attackers.txt);
 do 
 (
-iptables -I OUTPUT  -p all -s $int_ip1 -d $blackout -j LOG --log-prefix "[ATTACKER OUT] "  --log-level=info && iptables -I OUTPUT  -p all -s $int_ip1 -d $blackout -j DROP;
-iptables -I INPUT 27  -p all -d $int_ip1 -s $blackout -j LOG --log-prefix "[ATTACKER IN] "  --log-level=info && iptables -I INPUT 27  -p all -d $int_ip1 -s $blackout -j DROP;
+
+iptables -I OUTPUT  -p all -s $int_ip1 -d $blackout -j DROP && iptables -I INPUT 27  -p all -d $int_ip1 -s $blackout -j DROP;
+iptables -I OUTPUT  -p all -s $int_ip1 -d $blackout -j LOG --log-prefix "[ATTACKER OUT] "  --log-level=info && iptables -I INPUT 27  -p all -d $int_ip1 -s $blackout -j LOG --log-prefix "[ATTACKER IN] "  --log-level=info;
+
+#iptables -I FORWARD -p all -d $int_ip1 -s $blackout -j DROP;
+#iptables -I FORWARD -p all -s $int_ip1 -d $blackout -j DROP;
 
 #iptables -I FORWARD -p all -d $int_ip1 -s $blackout -j LOG --log-prefix "[ATTACKER FORWARD IN] "  --log-level=info;
-#iptables -I FORWARD -p all -d $int_ip1 -s $blackout -j DROP;
 #iptables -I FORWARD -p all -s $int_ip1 -d $blackout -j LOG --log-prefix "[ATTACKER FORWARD OUT] "  --log-level=info;
-#iptables -I FORWARD -p all -s $int_ip1 -d $blackout -j DROP;
 )
 echo $blackout ; 
 done
@@ -307,12 +322,15 @@ echo LOADING BLACKLIST
 for blackout in $(cat blacklist.txt);
 do 
 (
-iptables -I OUTPUT  -p all -d $blackout -j LOG --log-prefix "[BLACKLIST OUT] " --log-level=info && iptables -I OUTPUT  -p all -d $blackout -j DROP;
-iptables -I INPUT 27  -p all -s $blackout -j LOG --log-prefix "[BLACKLIST IN] "  --log-level=info && iptables -I INPUT 27  -p all -s $blackout -j DROP;
-#iptables -I FORWARD -p all -s $blackout -j LOG --log-prefix "[BLACKLIST FORWARD IN] "  --log-level=info;
+
+iptables -I OUTPUT  -p all -d $blackout -j DROP && iptables -I INPUT 27  -p all -s $blackout -j DROP;
+iptables -I OUTPUT  -p all -d $blackout -j LOG --log-prefix "[BLACKLIST OUT] " --log-level=info && iptables -I INPUT 27  -p all -s $blackout -j LOG --log-prefix "[BLACKLIST IN] "  --log-level=info;
+
 #iptables -I FORWARD -p all -s $blackout -j DROP;
-#iptables -I FORWARD -p all -d $blackout -j LOG --log-prefix "[BLACKLIST FORWARD OUT] "  --log-level=info;
 #iptables -I FORWARD -p all -d $blackout -j DROP;
+
+#iptables -I FORWARD -p all -s $blackout -j LOG --log-prefix "[BLACKLIST FORWARD IN] "  --log-level=info;
+#iptables -I FORWARD -p all -d $blackout -j LOG --log-prefix "[BLACKLIST FORWARD OUT] "  --log-level=info;
 )
 echo $blackout ; 
 done
@@ -322,13 +340,14 @@ echo LOADING IPv6 BLACKLIST
 for blackout in $(cat ipv6_blacklist.txt);
 do 
 (
-ip6tables -I OUTPUT  -p all -d $blackout -j LOG --log-prefix "[IPv6 BLACKLIST OUT] " --log-level=info && ip6tables -I OUTPUT  -p all -d $blackout -j DROP;
-ip6tables -I INPUT 27  -p all -s $blackout -j LOG --log-prefix "[IPv6 BLACKLIST IN] "  --log-level=info && ip6tables -I INPUT 27  -p all -s $blackout -j DROP;
 
-#ip6tables -I FORWARD -p all  -s $blackout -j LOG --log-prefix "[IPv6 BLACKLIST FORWARD IN] "  --log-level=info;
+ip6tables -I OUTPUT  -p all -d $blackout -j DROP && ip6tables -I INPUT 27  -p all -s $blackout -j DROP;
+ip6tables -I OUTPUT  -p all -d $blackout -j LOG --log-prefix "[IPv6 BLACKLIST OUT] " --log-level=info && ip6tables -I INPUT 27  -p all -s $blackout -j LOG --log-prefix "[IPv6 BLACKLIST IN] "  --log-level=info ;
+
 #ip6tables -I FORWARD -p all  -s $blackout -j DROP;
-#ip6tables -I FORWARD -p all  -d $blackout -j LOG --log-prefix "[IPv6 BLACKLIST FORWARD OUT] "  --log-level=info;
 #ip6tables -I FORWARD -p all  -d $blackout -j DROP;
+#ip6tables -I FORWARD -p all  -s $blackout -j LOG --log-prefix "[IPv6 BLACKLIST FORWARD IN] "  --log-level=info;
+#ip6tables -I FORWARD -p all  -d $blackout -j LOG --log-prefix "[IPv6 BLACKLIST FORWARD OUT] "  --log-level=info;
 )
 echo $blackout ; 
 done
@@ -342,13 +361,15 @@ echo IPv6 BLACKLIST LOADED
 #for whiteout in $(cat smtp_whitelist.txt);
 #do 
 #(
-iptables -I OUTPUT  -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 25,587 -j LOG --log-prefix "[SMTP-WL OUT] " --log-level=info && iptables -I OUTPUT  -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 25,587 -j ACCEPT;
-iptables -I INPUT 27  -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 25,587 -j LOG --log-prefix "[SMTP-WL IN] " --log-level=info && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 25,587 -j ACCEPT;
+
+iptables -I OUTPUT  -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 25,587 -j ACCEPT && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 25,587 -j ACCEPT;
+iptables -I OUTPUT  -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 25,587 -j LOG --log-prefix "[SMTP-WL OUT] " --log-level=info && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 25,587 -j LOG --log-prefix "[SMTP-WL IN] " --log-level=info;
+
+#iptables -I FORWARD -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 25,587 -j ACCEPT;
+#iptables -I FORWARD -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 25,587 -j ACCEPT;
 
 #iptables -I FORWARD -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 25,587 -j LOG --log-prefix "[SMTP-WL FORWARD IN] " --log-level=info;
-#iptables -I FORWARD -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 25,587 -j ACCEPT;
 #iptables -I FORWARD -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 25,587 -j LOG --log-prefix "[SMTP-WL FORWARD OUT] " --log-level=info;
-#iptables -I FORWARD -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 25,587 -j ACCEPT;
 #)
 #echo $whiteout ; 
 #done 
@@ -359,13 +380,15 @@ iptables -I INPUT 27  -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 25,5
 #for whiteout in $(cat http_whitelist.txt);
 #do 
 #(
-iptables -I OUTPUT  -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 80,443 -j LOG --log-prefix "[HTTPS-WL OUT] " --log-level=info && iptables -I OUTPUT  -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 80,443 -j ACCEPT;
-iptables -I INPUT 27  -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 80,443 -j LOG --log-prefix "[HTTPS-WL IN] " --log-level=info && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 80,443 -j ACCEPT;
+
+iptables -I OUTPUT  -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 80,443 -j ACCEPT && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 80,443 -j ACCEPT;
+iptables -I OUTPUT  -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 80,443 -j LOG --log-prefix "[HTTPS-WL OUT] " --log-level=info && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 80,443 -j LOG --log-prefix "[HTTPS-WL IN] " --log-level=info 
+
+#iptables -I FORWARD -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 80,443 -j ACCEPT;
+#iptables -I FORWARD -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 80,443 -j ACCEPT;
 
 #iptables -I FORWARD -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 80,443 -j LOG --log-prefix "[HTTPS-WL FORWARD IN] " --log-level=info;
-#iptables -I FORWARD -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 80,443 -j ACCEPT;
 #iptables -I FORWARD -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 80,443 -j LOG --log-prefix "[HTTPS-WL FORWARD OUT] " --log-level=info;
-#iptables -I FORWARD -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 80,443 -j ACCEPT;
 #)
 #echo $whiteout ; 
 #done 
