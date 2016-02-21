@@ -362,8 +362,8 @@ echo IPv6 BLACKLIST LOADED
 #do 
 #(
 
-iptables -I OUTPUT  -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 25,587 -j ACCEPT && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 25,587 -j ACCEPT;
-iptables -I OUTPUT  -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 25,587 -j LOG --log-prefix "[SMTP-WL OUT] " --log-level=info && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 25,587 -j LOG --log-prefix "[SMTP-WL IN] " --log-level=info;
+#iptables -I OUTPUT  -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 25,587 -j ACCEPT && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 25,587 -j ACCEPT;
+#iptables -I OUTPUT  -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 25,587 -j LOG --log-prefix "[SMTP-WL OUT] " --log-level=info && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 25,587 -j LOG --log-prefix "[SMTP-WL IN] " --log-level=info;
 
 #iptables -I FORWARD -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 25,587 -j ACCEPT;
 #iptables -I FORWARD -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 25,587 -j ACCEPT;
@@ -381,8 +381,8 @@ iptables -I OUTPUT  -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 25,587
 #do 
 #(
 
-iptables -I OUTPUT  -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 80,443 -j ACCEPT && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 80,443 -j ACCEPT;
-iptables -I OUTPUT  -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 80,443 -j LOG --log-prefix "[HTTPS-WL OUT] " --log-level=info && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 80,443 -j LOG --log-prefix "[HTTPS-WL IN] " --log-level=info 
+#iptables -I OUTPUT  -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 80,443 -j ACCEPT && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 80,443 -j ACCEPT;
+#iptables -I OUTPUT  -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 80,443 -j LOG --log-prefix "[HTTPS-WL OUT] " --log-level=info && iptables -I INPUT 27  -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 80,443 -j LOG --log-prefix "[HTTPS-WL IN] " --log-level=info 
 
 #iptables -I FORWARD -p tcp -d $int_ip1 -s $whiteout -m multiport --dports 80,443 -j ACCEPT;
 #iptables -I FORWARD -p tcp -s $int_ip1 -d $whiteout -m multiport --dports 80,443 -j ACCEPT;
