@@ -101,8 +101,8 @@ gateway_mac=$( nmap -sS $gateway_ip -p 53| grep -a "MAC Address:" | awk '{print 
 
 
 # RUN MAC CHANGER on INTERFACES
-#macchanger -A $int_if
-#macchanger -A $int_if2
+#macchanger -A "$int_if"
+#macchanger -A "$int_if2"
 
 # grab host mac addresses from ip link  
 host_mac=$(ip link | grep -a "ether" | awk ' {if (FNR==1) print $2}')
