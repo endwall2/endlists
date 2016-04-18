@@ -89,7 +89,7 @@
 #  2)  You have the freedom to distribute and share the code. 
 #  2a) The License, Header and Instructions must be attached to the code when re-distributed.
 #  3)  You have the freedom to modify and improve the code.
-#  3b) When modified or improved, during redistribution you must attatch the the LICENSE AGREEMENT in its entirety.   
+#  3b) When modified or improved, during redistribution you must attatch the LICENSE AGREEMENT in its entirety.   
 #  4)  You have the freedom to run the code on any computer of your choice.
 #  4a) You are free to run as many simultaneous instantiations of this code on as many computers as you wish for as long as you wish with any degree of simultaneity. 
 #  6)  This program may be used for any purpose and in any context and any setting including for personal use, academic use and business or comercial use.

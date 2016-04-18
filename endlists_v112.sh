@@ -10,21 +10,17 @@
 #
 # Description:  Traditional iptables list based blacklisting 
 #
-# Changes:  - Fixed some style issues
+# Changes:  - Removed Linux Security Booleans section.
+#           - Fixed some style issues
 #           - Fixed the logging bug (reversed the order of drop and log)
 #           - Use && to execute log and drop rules in parallel (multiprocess)
 #           - changed echo to Endlists Loaded
-#           - Fixed a typo in the smtp blacklist section
-#           - Changed order of blacklists and whitelists
-#           - Changed some blacklist settings for http and smtp
-#           - Moved blacklists out of endwall.sh and into endlists.sh
-#           - Made save rules non distribution specific
-#           
 #
 #
 # Instructions: make directory,copy the file and change name to endlists.sh
 #               make whitelists,blacklist text files, edit the endlists.sh file
-#               change permisions to make endlists.sh executable, run the file.    
+#               change permisions to make endlists.sh executable, run the file.  
+#                 
 #
 # Notes:    -  This script is slow to run with more than 1000 blacklist entries.
 #           -  Use endsets.sh if your blacklists run over 1000 entries.
@@ -43,11 +39,9 @@
 # $ echo " " >> html_blacklist.txt  # strings of attack html calls (cgi,php) to block from http 
 # $ echo " " >> ipv6_blacklist.txt  # ipv6 addresses to blacklist all ports and protocols
 # $ ls                              # list the files you just made
-# $ nano endlists.sh   # go to the section below labeled GLOBAL VARIABLES
-#                       edit the variables client1_ip,client1_mac,client1_ip,client2_mac 
-#                       so that they match your needs and save. ^X  
-#                       uncomment the macchanger lines to use machanger
-# $ chmod u+rwx endlists.sh          # change permisions to allow script execution 
+# $ nano endlists.sh   # go to the section below labeled SAVE RULES (line 336)
+#                      # comment out save rules for distributions you don't use line 336
+# $ chmod u+rwx endlists.sh         # change permisions to allow script execution 
 # $ su                              # become root
 # # ./endwall.sh                    # execute script/install the basic firewall rules
 # # ./endlists.sh                   # execute script / install blacklists
@@ -77,18 +71,22 @@
 # $ su                     
 # # ./endwall.sh   # run the endwall firewall script 
 # # ./endlists.sh  # run the blacklist/whitelist script endlists.sh
+###############################################################################################
+#                Enable iptables and ip6tables if using systemd
+################################################################################################
+# systemctl enable iptables
+# systemctl enable ip6tables
+# systemctl enable iptables.service
+# systemctl enable ip6tables.service
+# systemctl restart iptables
+# systemctl restart ip6tables
+#
+#
 ################################################################################################
 #                           GLOBAL VARIABLES
 ################################################################################################
 iptables=/sbin/iptables
 ip6tables=/sbin/ip6tables
-
-#systemctl enable iptables
-#systemctl enable ip6tables
-#systemctl enable iptables.service
-#systemctl enable ip6tables.service
-#systemctl restart iptables
-#systemctl restart ip6tables
 
 # Grab interface name from ip link and parse 
 int_if=$(ip link | grep -a "2: " | awk -F: '{ print $2}')
@@ -98,11 +96,6 @@ int_if2=$(ip link | grep -a "3: " | awk -F: '{ print $2}')
 gateway_ip=$(ip route | awk '/via/ {print $3}')
 #gateway_mac=$( arp | awk '/gateway/ {print $3}')
 gateway_mac=$( nmap -sS $gateway_ip -p 53| grep -a "MAC Address:" | awk '{print $3}')
-
-
-# RUN MAC CHANGER on INTERFACES
-#macchanger -A "$int_if"
-#macchanger -A "$int_if2"
 
 # grab host mac addresses from ip link  
 host_mac=$(ip link | grep -a "ether" | awk ' {if (FNR==1) print $2}')
@@ -115,16 +108,6 @@ host_ip2=$(ip addr | grep -a "scope global"|awk 'BEGIN  {FS="/"} {if (FNR==2) pr
 host_ip1v6=$(ip addr | grep -a "scope link"|awk 'BEGIN  {FS="/"} {if (FNR==1) print $1}'| awk '{print $2}')
 host_ip2v6=$(ip addr | grep -a "scope link"|awk 'BEGIN  {FS="/"} {if (FNR==2) print $1}'| awk '{print $2}')
 
-############################  CLIENTS  ################################################
-# change these values but dont leave them blank
-# add more clients as you need them use $ arp or $ nmap -sS client_ip to determine values 
-
-#client1_mac=00:00:00:00:00:00  # change to be the mac address of client 1
-#client2_mac=00:00:00:00:00:00  # change to be the mac address of client 2
-
-#client1_ip=192.168.0.161   # change to be the static ip of your first internal client
-#client2_ip=192.168.0.162   # change to be the static ip of your second internal client
-
 ########################### INTERNAL VARIABLES ################################## 
 int_mac="$host_mac"         # internal mac address of interface 1
 int_mac2="$host_mac2"       # internal mac address of interface 2 
@@ -132,56 +115,6 @@ int_ip1="$host_ip"          # internal ipv4 address of interface 1
 int_ip1v6="$host_ip1v6"     # internal ipv6 address of interface 1  
 int_ip2="$host_ip2"         # internal ipv4 address of interface 2
 int_ip2v6="$host_ip2v6"     # internal ipv6 address of interface 2
-
-
-# int_if2,int_ip2 and int_mac2 are not currently used in this script, you may safely comment these lines out. 
-
-###################################################################################################################################
-#                              LINUX SECURITY BOOLEANS
-###################################################################################################################################
-# Disable Source Routed Packets
-for f in /proc/sys/net/ipv4/conf/*/accept_source_route; do
-       echo 0 > $f
-done
-
-# Disable ICMP Redirect Acceptance
-for f in /proc/sys/net/ipv4/conf/*/accept_redirects; do
-      echo 0 > $f
-done
-
-# Don't send Redirect Messages
-for f in /proc/sys/net/ipv4/conf/*/send_redirects; do
-     echo 0 > $f
-done
-
-# Drop Spoofed Packets coming in on an interface, which if replied to,
-# would result in the reply going out a different interface.
-for f in /proc/sys/net/ipv4/conf/*/rp_filter; do
-     echo 1 > $f
-done
-
-# Log packets with impossible addresses.
-for f in /proc/sys/net/ipv4/conf/*/log_martians; do
-     echo 1 > $f
-done
-
-echo 1 > /proc/sys/net/ipv4/tcp_syncookies                              # enable tcp syn cookies (prevent against the common 'syn flood attack')
-echo 0 > /proc/sys/net/ipv4/ip_forward                                  # disable Packet forwarning between interfaces
-echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts                 # ignore all ICMP ECHO and TIMESTAMP requests sent to it via broadcast/multicast
-echo 1 > /proc/sys/net/ipv4/icmp_ignore_bogus_error_responses           # disable logging of bogus responses to broadcast frames
-echo 1 > /proc/sys/net/ipv4/conf/all/log_martians                       # log packets with impossible addresses to kernel log
-echo 1 > /proc/sys/net/ipv4/conf/all/rp_filter                          # do source validation by reversed path (Recommended option for single homed hosts)
-echo 0 > /proc/sys/net/ipv4/conf/all/accept_source_route                # Disable source routed packets redirects
-echo 0 > /proc/sys/net/ipv4/conf/all/accept_redirects                   # don't accept redirects
-echo 0 > /proc/sys/net/ipv4/conf/all/send_redirects                     # don't send redirects
-echo 0 > /proc/sys/net/ipv4/conf/all/accept_source_route                # don't accept packets with SRR option
-
-echo 0 > /proc/sys/net/ipv6/conf/all/accept_redirects                   # don't accept redirects
-echo 0 > /proc/sys/net/ipv6/conf/all/accept_source_route                # don't accept packets with SRR option
-
-#echo 1 > /proc/sys/net/ipv4/conf/all/disable_ipv6                      # disable ipv6
-#setsebool httpd_can_network_connect on   #needed for squirelmail if you are on selinux
-#setsebool httpd_can_sendmail on          #needed for squirelmail send if you are selinux
 
 ####################################################################################
 #                    IP FILTER BLACK LISTS
