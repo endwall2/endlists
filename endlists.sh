@@ -4,9 +4,10 @@
 ####################################################################################
 # Program: endlists.sh
 # Type: Bourne shell script
-# Current Version: 1.15  Apr 16 2016
+# Creation Date: February 14, 2016
+# Current Version: 1.16  May 05 2016
 # Stable Version:  1.13, Feb 28 2016
-# Author: Endwall Development Team
+# Author: The Endware Development Team
 #
 # Description:  Traditional iptables list based blacklisting 
 #
