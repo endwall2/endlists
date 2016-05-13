@@ -5,7 +5,7 @@
 # Program: endlists.sh
 # Type: Bourne shell script
 # Creation Date: February 14, 2016
-# Current Version: 1.17  May 05 2016
+# Current Version: 1.18  May 12 2016
 # Stable Version:  1.13, Feb 28 2016
 # Author: The Endware Development Team
 # Copyright: The Endware Development Team 2016
@@ -14,6 +14,7 @@
 # Description:  Traditional iptables list based blacklisting 
 #
 # Changes:  - Updated EULA
+#           - Fixed a jumped line of code
 #           - Added EULA
 #           - Removed Linux Security Booleans section.
 #           - Fixed some style issues
@@ -112,14 +113,15 @@
 #  The Endware Development Team
 ###############################################################################################################################################################################
 ##############################################################################################################################################################################
-#                                           LICENSE AGREEMENT  
+#                               LICENSE AGREEMENT  
 ##############################################################################################################################################################################
 #  BEGINNING OF LICENSE AGREMENT
 #  TITLE:  THE ENDWARE END USER LICENSE AGREEMENT (EULA) 
 #  CREATION DATE: MARCH 19, 2016
-#  VERSION: 1.07 
-#  VERSION DATE: MAY 5, 2016
-#   
+#  VERSION: 1.08 
+#  VERSION DATE: MAY 12, 2016
+#  COPYRIGHT: THE ENDWARE DEVELOPMENT TEAM, 2016
+#      
 #  WHAT CONSTITUES "USE"? WHAT IS A "USER"?
 #  0) a) Use of this program means the ability to study, posses, run, copy, modify, publish, distribute and sell the code as included in all lines of this file,
 #        in text format or as a binary file consituting this particular program or its compiled binary machine code form, as well as the the performance 
@@ -167,7 +169,7 @@
 #         however the software tool itself may not be included in the patent or covered in the patent as a novel invention, and the user agrees not to do this and not to attempt to do this.
 #  WHO GRANTS THESE FREEDOMS ?
 #  10) The creators of this software are the original developer,"Endwall", and anyone listed as being a member of "The Endware Development Team", as well as ancillary contributors, and user modifiers and developers of the software. 
-#  11) The aformentioned freedoms of use listed in sections 4),5),6),and 7) are granted by the creators of this software and the Endwall Development Team to any qualifying user listed in section 1) and 
+#  11) The aformentioned freedoms of use listed in sections 4),5),6),and 7) are granted by the creators of this software and the Endware Development Team to any qualifying user listed in section 1) and 
 #      comporting with any restrictions and qualifications mentioned in sections 2), 3), 8), 9), 10) and 11) of this LICENSE AGREEMENT.
 #  WHAT RELATIONSHIP DO THE USERS HAVE WITH THE CREATORS OF THE SOFTWARE ?
 #  12)  This software is distributed without any warranty and without any guaranty and the creators do not imply anything about its usefulness or efficacy.
