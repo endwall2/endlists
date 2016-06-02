@@ -13,7 +13,7 @@
 ####################################################################################
 # Description:  Traditional iptables list based blacklisting 
 #
-# Changes:  - Updated insertion lists
+# Changes:  - Fixed insertion numbers
 #           - Updated EULA
 #           - Fixed a jumped line of code
 #           - Added EULA
@@ -188,6 +188,7 @@
 #       This would be deemed unacceptable and is specifically rejected by the enumeration presented.  If the wording presented is problematic please contact us and suggest a change,
 #       and it will be taken into consideration.  
 #################################################################################################################################################################################
+##########################################################  BEGINNING OF PROGRAM   ########################################################################################################
 
 #################################################################################################################
 #                           GLOBAL VARIABLES
@@ -462,3 +463,4 @@ echo INTERFACE_1: "$int_if"  MAC:"$int_mac"  IPv4:"$int_ip1" IPv6:"$int_ip1v6"
 echo INTERFACE_2: "$int_if2" MAC:"$int_mac2" IPv4:"$int_ip2" IPv6:"$int_ip2v6"
 # print the time the script finishes
 date
+##########################################################  END OF PROGRAM  ########################################################################################################
