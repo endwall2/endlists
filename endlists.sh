@@ -5,15 +5,16 @@
 # Program: endlists.sh
 # Type: Bourne shell script
 # Creation Date: February 14, 2016
-# Current Version: 1.22  Jul 9 2016
-# Stable Version:  1.20, Jun 6 2016
+# Current Version: 1.23  Aug 11 2016
+# Stable Version:  1.22, Jul 9 2016
 # Author: The Endware Development Team
 # Copyright: The Endware Development Team 2016
 #
 ####################################################################################
 # Description:  Traditional iptables list based blacklisting 
 #
-# Changes:  - Updated Acknowledgements
+# Changes:  - Loop over interfaces
+#           - Updated Acknowledgements
 #           - Rewrite with shell functions
 #           - Updated EULA
 #           - Fixed insertion numbers
@@ -515,7 +516,7 @@ echo "ENDLISTS LOADED"
 
 #############################   PRINT ADDRESSES  ############################################################
 echo GATEWAY  :          MAC:$gateway_mac  IP:$gateway_ip  
-echo INTERFACE_1: "$int_if"  MAC:"$int_mac"  IPv4:"$int_ip1" IPv6:"$int_ip1v6" 
+echo INTERFACE_1: "$int_if1"  MAC:"$int_mac1"  IPv4:"$int_ip1" IPv6:"$int_ip1v6" 
 echo INTERFACE_2: "$int_if2" MAC:"$int_mac2" IPv4:"$int_ip2" IPv6:"$int_ip2v6"
 # print the time the script finishes
 date
