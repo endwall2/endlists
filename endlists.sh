@@ -253,8 +253,8 @@ done
 ####################################################################################################
 #                           GLOBAL VARIABLES
 ####################################################################################################
-iptables=/sbin/iptables
-ip6tables=/sbin/ip6tables
+iptables="/sbin/iptables"
+ip6tables="/sbin/ip6tables"
 
 # Grab interface name from ip link and parse 
 int_if1=$(ip link | grep -a "2: " | awk -F: '{ print $2}')
@@ -445,12 +445,12 @@ for int_if in "$int_if1" "$int_if2"
 
 do
 
-if [ $ind == "1" ] 
+if [ $ind = "1" ] 
 then 
 int_mac="$int_mac1" 
 int_ip="$int_ip1"
 int_ipv6="$int_ip1v6"
-elif [ $ind == "2" ]
+elif [ $ind = "2" ]
 then
 int_ip="$int_ip2" 
 int_mac="$int_mac2" 
