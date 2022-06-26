@@ -281,18 +281,32 @@ int_ip2v6="$host_ip2v6"     # internal ipv6 address of interface 2
 ###################################################################################
 
 ### Rule Insertion Points
-insert_in=8
-insert_fwd=3
-insert_out=8
 
-insert6_in=8
-insert6_fwd=3
-insert6_out=8
+# rule insertion is before the rule with the handle nubmber
+# use the following command to see the handle numbers 
+# nft -a -p list table inet filter
+
+## remove  " position "$insert_out" ", from rules to default to 1st rule insertion
+
+#### Insertion points for IPv4 rules
+insert_in=10
+insert_fwd=803
+insert_out=14
+
+#### Insertion points for IPv6 rules
+insert6_in=10
+insert6_fwd=803
+insert6_out=14
+
+### insertion points for iptables rules for matching
+insertIPT_in=1
+insertIPT_out=1
+insertIPT_fwd=1
 
 ## NOTE:
-### Insertion fails and gives error messages, but puts it in the correct place, just uses insert and put it at the top to suppress the error messages
-#position "$insert_out" 
-#position "$insert_in"
+### but puts it in the correct place
+#  position "$insert_out" 
+#  position "$insert_in"
 
 #########################################################        FUNCTIONS        ##########################################################################################
 
@@ -304,13 +318,13 @@ proto=$1
 ports=$2
 tag=$3
 
-nft insert rule inet filter output oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip" "$proto" sport { "$ports" } ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
-nft insert rule inet filter input  iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" dport { "$ports" } ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
-nft insert rule inet filter output oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip"  "$proto" dport { "$ports" } ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
-nft insert rule inet filter input iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" sport { "$ports" } ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
+nft insert rule inet filter output position "$insert_out" oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip" "$proto" sport { "$ports" } ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
+nft insert rule inet filter input position "$insert_in" iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" dport { "$ports" } ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
+nft insert rule inet filter output position "$insert_out"  oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip"  "$proto" dport { "$ports" } ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
+nft insert rule inet filter input position "$insert_in" iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" sport { "$ports" } ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
 
-#nft insert rule inet filter forward oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip" "$proto" sport { "$ports" } ip daddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD] \" drop
-#nft insert rule inet filter forward iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" dport { "$ports" } ip saddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD] \" drop
+#nft insert rule inet filter forward position "$insert_fwd" oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip" "$proto" sport { "$ports" } ip daddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD] \" drop
+#nft insert rule inet filter forward position "$insert_fwd" iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" dport { "$ports" } ip saddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD] \" drop
 }
 
 ############ IPv4 Log Drop for a specific interface, protocol, internal Lan IP, per blackout IPv4 IP. Only input traffic is banned.
@@ -320,8 +334,8 @@ proto=$1
 ports=$2
 tag=$3
 
-nft insert rule inet filter input iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" dport { "$ports" } ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
-nft insert rule inet filter input iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" sport { "$ports" } ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
+nft insert rule inet filter input position "$insert_in" iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" dport { "$ports" } ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
+nft insert rule inet filter input position "$insert_in" iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" sport { "$ports" } ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
 }
 
 ############ IPv4 Log Drop for a specific interface, protocol, internal Lan IP, per blackout IPv4 IP. Only output traffic is banned.
@@ -331,8 +345,8 @@ proto=$1
 ports=$2
 tag=$3
 
-nft insert rule inet filter output oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip" "$proto" sport { "$ports" } ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
-nft insert rule inet filter output oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip"  "$proto" dport { "$ports" } ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
+nft insert rule inet filter output position "$insert_out" oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip" "$proto" sport { "$ports" } ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
+nft insert rule inet filter output position "$insert_out" oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip"  "$proto" dport { "$ports" } ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
 }
 
 
@@ -344,13 +358,13 @@ proto=$1
 ports=$2
 tag=$3
 
-nft insert rule inet filter output oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip" "$proto" sport { "$ports" } ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" accept
-nft insert rule inet filter input iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" dport { "$ports" } ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" accept
-nft insert rule inet filter output oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip"  "$proto" dport { "$ports" } ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" accept
-nft insert rule inet filter input iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" sport { "$ports" } ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" accept
+nft insert rule inet filter output position "$insert_out" oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip" "$proto" sport { "$ports" } ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" accept
+nft insert rule inet filter input position "$insert_in" iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" dport { "$ports" } ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" accept
+nft insert rule inet filter output position "$insert_out" oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip"  "$proto" dport { "$ports" } ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" accept
+nft insert rule inet filter input position "$insert_in" iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" sport { "$ports" } ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" accept
 
-#nft insert rule inet filter forward oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip" "$proto" sport { "$ports" } ip daddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD] \" accept
-#nft insert rule inet filter forward iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" dport { "$ports" } ip saddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD] \" accept
+#nft insert rule inet filter forward position "$insert_fwd" oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip" "$proto" sport { "$ports" } ip daddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD] \" accept
+#nft insert rule inet filter forward position "$insert_fwd" iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" dport { "$ports" } ip saddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD] \" accept
 }
 
 
@@ -362,13 +376,13 @@ proto=$1
 ports=$2
 tag=$3
 
-nft insert rule inet filter output oifname "$int_if" ip6 saddr "$int_ip" "$proto" sport { "$ports" } ip6 daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
-nft insert rule inet filter input iifname "$int_if" ip6 daddr "$int_ip" "$proto" dport { "$ports" } ip6 saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
-nft insert rule inet filter output oifname "$int_if" ip6 saddr "$int_ip"  "$proto" dport { "$ports" } ip6 daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
-nft insert rule inet filter input iifname "$int_if" ip6 daddr "$int_ip" "$proto" sport { "$ports" } ip6 saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
+nft insert rule inet filter output position "$insert_out" oifname "$int_if" ip6 saddr "$int_ip" "$proto" sport { "$ports" } ip6 daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
+nft insert rule inet filter input position "$insert_in" iifname "$int_if" ip6 daddr "$int_ip" "$proto" dport { "$ports" } ip6 saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
+nft insert rule inet filter output position "$insert_out" oifname "$int_if" ip6 saddr "$int_ip"  "$proto" dport { "$ports" } ip6 daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
+nft insert rule inet filter input position "$insert_in" iifname "$int_if" ip6 daddr "$int_ip" "$proto" sport { "$ports" } ip6 saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
 
-#nft insert rule inet filter forward oifname "$int_if" ip6 saddr "$int_ip" "$proto" sport { "$ports" } ip6 daddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD] \" drop
-#nft insert rule inet filter forward iifname "$int_if" ip6 daddr "$int_ip" "$proto" dport { "$ports" } ip6 saddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD] \" drop
+#nft insert rule inet filter forward position "$insert_fwd" oifname "$int_if" ip6 saddr "$int_ip" "$proto" sport { "$ports" } ip6 daddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD] \" drop
+#nft insert rule inet filter forward position "$insert_fwd" iifname "$int_if" ip6 daddr "$int_ip" "$proto" dport { "$ports" } ip6 saddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD] \" drop
 
 }
 
@@ -381,13 +395,13 @@ proto=$1
 ports=$2
 tag=$3
 
-nft insert rule inet filter output oifname "$int_if" ip6 saddr "$int_ip" "$proto" sport { "$ports" } ip6 daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" accept
-nft insert rule inet filter input iifname "$int_if" ip6 daddr "$int_ip" "$proto" dport { "$ports" } ip6 saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" accept
-nft insert rule inet filter output oifname "$int_if" ip6 saddr "$int_ip"  "$proto" dport { "$ports" } ip6 daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" accept
-nft insert rule inet filter input iifname "$int_if" ip6 daddr "$int_ip" "$proto" sport { "$ports" } ip6 saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" accept
+nft insert rule inet filter output position "$insert_out" oifname "$int_if" ip6 saddr "$int_ip" "$proto" sport { "$ports" } ip6 daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" accept
+nft insert rule inet filter input position "$insert_in" iifname "$int_if" ip6 daddr "$int_ip" "$proto" dport { "$ports" } ip6 saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" accept
+nft insert rule inet filter output position "$insert_out" oifname "$int_if" ip6 saddr "$int_ip"  "$proto" dport { "$ports" } ip6 daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" accept
+nft insert rule inet filter input position "$insert_in" iifname "$int_if" ip6 daddr "$int_ip" "$proto" sport { "$ports" } ip6 saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" accept
 
-#nft insert rule inet filter forward oifname "$int_if" ip6 saddr "$int_ip" "$proto" sport { "$ports" } ip6 daddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD] \" accept
-#nft insert rule inet filter forward iifname "$int_if" ip6 daddr "$int_ip" "$proto" dport { "$ports" } ip6 saddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD] \" accept
+#nft insert rule inet filter forward position "$insert_fwd" oifname "$int_if" ip6 saddr "$int_ip" "$proto" sport { "$ports" } ip6 daddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD] \" accept
+#nft insert rule inet filter forward position "$insert_fwd" iifname "$int_if" ip6 daddr "$int_ip" "$proto" dport { "$ports" } ip6 saddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD] \" accept
 
 }
 
@@ -397,13 +411,13 @@ log_drop_ip(){
 proto=$1
 tag=$2
 
-nft insert rule inet filter output oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip" ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
-nft insert rule inet filter input iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
-nft insert rule inet filter output oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip"  "$proto" ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
-nft insert rule inet filter input iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
+nft insert rule inet filter output position "$insert_out" oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip" ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
+nft insert rule inet filter input position "$insert_in" iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
+nft insert rule inet filter output position "$insert_out" oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip"  "$proto" ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
+nft insert rule inet filter input position "$insert_in" iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" "$proto" ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
 
-#nft insert rule inet filter forward oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip" ip daddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD OUT] \" drop
-#nft insert rule inet filter forward iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" ip saddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD IN] \" drop
+#nft insert rule inet filter forward position "$insert_fwd" oifname "$int_if" ip protocol "$proto" ip saddr "$int_ip" ip daddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD OUT] \" drop
+#nft insert rule inet filter forward position "$insert_fwd" iifname "$int_if" ip protocol "$proto" ip daddr "$int_ip" ip saddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD IN] \" drop
 }
 
 ############## IPv4 Log Drop by IP 
@@ -411,13 +425,13 @@ log_drop_any(){
 
 tag=$1
 
-nft insert rule inet filter output ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
-nft insert rule inet filter input ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
-nft insert rule inet filter output ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
-nft insert rule inet filter input ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
+nft insert rule inet filter output position "$insert_out" ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
+nft insert rule inet filter input position "$insert_in" ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
+nft insert rule inet filter output position "$insert_out" ip daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
+nft insert rule inet filter input position "$insert_in" ip saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
 
-#nft insert rule inet filter forward ip daddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD OUT] \" drop
-#nft insert rule inet filter forward ip saddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD IN] \" drop
+#nft insert rule inet filter forward position "$insert_fwd" ip daddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD OUT] \" drop
+#nft insert rule inet filter forward position "$insert_fwd" ip saddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD IN] \" drop
 }
 
 ###################### IPv6 LOG DROP by IP 
@@ -425,13 +439,13 @@ log_drop6_any(){
 
 tag=$1
 
-nft insert rule inet filter output ip6 daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
-nft insert rule inet filter input ip6 saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
-nft insert rule inet filter output ip6 daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
-nft insert rule inet filter input ip6 saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
+nft insert rule inet filter output position "$insert6_out" ip6 daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
+nft insert rule inet filter input position "$insert6_in" ip6 saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
+nft insert rule inet filter output position "$insert6_out" ip6 daddr "$blackout" counter log level "info" prefix \"["$tag" OUT] \" drop
+nft insert rule inet filter input position "$insert6_in" ip6 saddr "$blackout" counter log level "info" prefix \"["$tag" IN] \" drop
 
-#nft insert rule inet filter forward ip6 daddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD OUT]\" drop
-#nft insert rule inet filter forward ip6 saddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD IN]\" drop
+#nft insert rule inet filter forward "$insert6_fwd" ip6 daddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD OUT]\" drop
+#nft insert rule inet filter forward "$insert6_fwd" ip6 saddr "$blackout" counter log level "info" prefix \"["$tag" FORWARD IN]\" drop
 }
 
 
@@ -444,11 +458,11 @@ proto=$1
 port=$2
 tag=$3
 
-iptables -I INPUT "$insert_in" -p "$proto" --dport "$port"  -m string --string "$blackout" --algo bm -j DROP && iptables -I OUTPUT "$insert_out" -p "$proto" --dport "$port" -m string --string "$blackout" --algo bm -j DROP ;
-iptables -I INPUT "$insert_in" -p "$proto" --dport "$port"  -m string --string "$blackout" --algo bm -j LOG --log-prefix "$tag" --log-level=info && iptables -I OUTPUT "$insert_out" -p "$proto" --dport "$port" -m string --string "$blackout" --algo bm -j LOG --log-prefix "$tag" --log-level=info ;
+iptables -I INPUT "$insertIPT_in" -p "$proto" --dport "$port"  -m string --string "$blackout" --algo bm -j DROP && iptables -I OUTPUT "$insert_out" -p "$proto" --dport "$port" -m string --string "$blackout" --algo bm -j DROP ;
+iptables -I INPUT "$insertIPT_in" -p "$proto" --dport "$port"  -m string --string "$blackout" --algo bm -j LOG --log-prefix "$tag" --log-level=info && iptables -I OUTPUT "$insert_out" -p "$proto" --dport "$port" -m string --string "$blackout" --algo bm -j LOG --log-prefix "$tag" --log-level=info ;
 
-#iptables -I FORWARD "$insert_fwd" -p "$proto" --dport "$port"  -m string --string "$blackout" --algo bm -j DROP 
-#iptables -I FORWARD "$insert_fwd" -p "$proto" --dport "$port"  -m string --string "$blackout" --algo bm -j LOG --log-prefix "$tag" --log-level=info
+#iptables -I FORWARD "$insertIPT_fwd" -p "$proto" --dport "$port"  -m string --string "$blackout" --algo bm -j DROP 
+#iptables -I FORWARD "$insertIPT_fwd" -p "$proto" --dport "$port"  -m string --string "$blackout" --algo bm -j LOG --log-prefix "$tag" --log-level=info
 
 }
 
@@ -459,16 +473,16 @@ proto=$1
 ports=$2
 tag=$3
 
-iptables -I INPUT "$insert_in" -p tcp -m multiport --dports "$ports" -m string --string "$blackout" --algo bm -j DROP && iptables -I OUTPUT "$insert_out" -p tcp -m multiport --dports "$ports" -m string --string "$blackout" --algo bm -j DROP;
-iptables -I INPUT "$insert_in" -p tcp -m multiport --dports "$ports" -m string --string "$blackout" --algo bm -j LOG --log-prefix \"["$tag"] \" --log-level=info && iptables -I OUTPUT "$insert_out" -p tcp -m multiport --dports "$ports" -m string --string "$blackout" --algo bm -j LOG --log-prefix \"["$tag"] \" --log-level=info;
+iptables -I INPUT "$insertIPT_in" -p "$proto" -m multiport --dports "$ports" -m string --string "$blackout" --algo bm -j DROP && iptables -I OUTPUT "$insert_out" -p "$proto" -m multiport --dports "$ports" -m string --string "$blackout" --algo bm -j DROP;
+iptables -I INPUT "$insertIPT_in" -p "$proto" -m multiport --dports "$ports" -m string --string "$blackout" --algo bm -j LOG --log-prefix \"["$tag"] \" --log-level=info && iptables -I OUTPUT "$insert_out" -p "$proto" -m multiport --dports "$ports" -m string --string "$blackout" --algo bm -j LOG --log-prefix \"["$tag"] \" --log-level=info;
 
-#iptables -I FORWARD "$insert_fwd" -p tcp -m multiport --dports "$ports" -m string --string "$blackout" --algo bm -j DROP 
-#iptables -I FORWARD "$insert_fwd" -p tcp -m multiport --dports "$ports" -m string --string "$blackout" --algo bm -j LOG --log-prefix "$tag" --log-level=info;
+#iptables -I FORWARD "$insertIPT_fwd" -p "$proto" -m multiport --dports "$ports" -m string --string "$blackout" --algo bm -j DROP 
+#iptables -I FORWARD "$insertIPT_fwd" -p "$proto" -m multiport --dports "$ports" -m string --string "$blackout" --algo bm -j LOG --log-prefix "$tag" --log-level=info;
 }
 #######################################################################################################
 
 
-##################################################################################################################################################################
+###############################################################################################################################################################
 
 ### loop over interfaces
 
@@ -500,6 +514,9 @@ then
 #################################################################################### 
 # IP FILTER BLACK LISTS 
 #################################################################################### 
+### ports that your server serves to clearnet access
+server_ports="21,20,70,80,443,53,25,587,953,993,995,5222,6697,22543,64738"
+
 
 ## block traffic to the multiple ports that you serve to,
 ## ban ip values in big_bans.txt (use CIDR ranges like 132.0.0.0/8 )
@@ -507,7 +524,7 @@ then
 echo SERVER BLACKLIST LOADING 
 for blackout in $(cat big_bans.txt); 
 do 
-log_drop tcp "25,587,80,443" "BIG-BANS" 
+log_drop tcp "$server_ports" "BIG-BANS" 
 echo "$blackout" 
 done 
 echo SERVER BLACKLIST LOADED
@@ -549,6 +566,8 @@ echo SERVER BLACKLIST LOADED
 #done
 #echo ATTACKER BLACKLIST LOADED
 
+################################### TOTAL IPv4 BAN #################################################################
+
 ## DROP ALL TRAFFIC TO SERVER from IPv4 ips in blacklist.txt
 #echo LOADING BLACKLIST 
 #for blackout in $(cat blacklist.txt);
@@ -559,7 +578,6 @@ echo SERVER BLACKLIST LOADED
 #echo BLACKLIST LOADED
 
 ################################### Total IPv6 BAN ###################################################################
-
 
 ## DROP ALL TRAFFIC TO SERVER from IPv6 ips in blacklist.txt
 #echo LOADING IPv6 BLACKLIST 
